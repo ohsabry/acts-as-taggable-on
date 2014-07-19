@@ -117,7 +117,7 @@ module ActsAsTaggableOn::Taggable
                       " AND #{ActsAsTaggableOn::Tagging.table_name}.taggable_type = #{quote_value(base_class.name, nil)}" +
                       " AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_id = #{quote_value(owned_by.id, nil)}" +
                       " AND #{ActsAsTaggableOn::Tagging.table_name}.tagger_type = #{quote_value(owned_by.class.base_class.to_s, nil)}"
-            
+
             joins << " AND " + sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.created_at >= ?", options.delete(:start_at)]) if options[:start_at]
             joins << " AND " + sanitize_sql(["#{ActsAsTaggableOn::Tagging.table_name}.created_at <= ?", options.delete(:end_at)])   if options[:end_at]
           end
@@ -372,7 +372,7 @@ module ActsAsTaggableOn::Taggable
       tagging_contexts.each do |context|
         next unless tag_list_cache_set_on(context)
         # List of currently assigned tag names
-        tag_list = tag_list_cache_on(context).uniq
+        tag_list = tag_list_cache_on(context)
 
         # Find existing tags or create non-existing tags:
         tags = find_or_create_tags_from_list_with_context(tag_list, context)
@@ -400,18 +400,19 @@ module ActsAsTaggableOn::Taggable
           end
         else
           # Delete discarded tags and create new tags
-          old_tags = current_tags - tags
-          new_tags = tags - current_tags
+          old_tags = current_tags
+          new_tags = tags
         end
 
         # Destroy old taggings:
         if old_tags.present?
-          taggings.not_owned.by_context(context).destroy_all(tag_id: old_tags)
+          #taggings.not_owned.by_context(context).destroy_all(tag_id: old_tags)
         end
 
         # Create new taggings:
         new_tags.each do |tag|
-          taggings.create!(tag_id: tag.id, context: context.to_s, taggable: self)
+          tagging = ActsAsTaggableOn::Tagging.where(:tag_id => tag.id, :context => context.to_s, :taggable => self).first_or_create
+          ActsAsTaggableOn::Tagging.increment_counter(:frequency, tagging.id)
         end
       end
 

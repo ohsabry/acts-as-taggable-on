@@ -19,6 +19,7 @@ ActiveRecord::Schema.define version: 0 do
     t.string :context, limit: 128
 
     t.datetime :created_at
+    t.integer :frequency, default: 0
   end
   add_index 'taggings',
             ['tag_id', 'taggable_id', 'taggable_type', 'context', 'tagger_id', 'tagger_type'],

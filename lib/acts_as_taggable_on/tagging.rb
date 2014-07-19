@@ -5,6 +5,7 @@ module ActsAsTaggableOn
                     :tag_id,
                     :context,
                     :taggable,
+                    :frequency,
                     :taggable_type,
                     :taggable_id,
                     :tagger,
